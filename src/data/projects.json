@@ -1,0 +1,32 @@
+[
+	{
+		"name": "Link Drawer",
+		"description": "Create your link list and share and embbed anywhere!",
+		"link": "https://redux-quizzical.herokuapp.com/",
+		"repo": "https://github.com/FooOperator/quizzical-masterpiece"
+	},
+	{
+		"name": "To-do Masterpiece",
+		"description": "Minimal, responsive to-do manager",
+		"link": "https://master--todo-masterpiece.netlify.app/",
+		"repo": "https://github.com/FooOperator/todo-masterpiece"
+	},
+	{
+		"name": "Quizzical Masterpiece",
+		"description": "Serverless trivia minigame",
+		"link": "https://redux-quizzical.herokuapp.com/",
+		"repo": "https://github.com/FooOperator/quizzical-masterpiece"
+	},
+	{
+		"name": "Stubby - link shortener",
+		"description": "Link shortener (not really)",
+		"link": "https://stubby-link-shortener.vercel.app/",
+		"repo": "https://github.com/FooOperator/stubby"
+	},
+	{
+		"name": "Pokedex",
+		"description": "Browse and check your favorite pokemon",
+		"link": "https://pokedex-2u2vqr2lb-foooperator.vercel.app/",
+		"repo": "https://github.com/FooOperator/pokedex"
+	}
+]
