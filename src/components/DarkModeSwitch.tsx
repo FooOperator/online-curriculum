@@ -1,40 +1,63 @@
-import { getCookie, hasCookie, setCookie } from "cookies-next";
 import { useEffect, useState } from "react";
+import { FaMoon, FaSun } from "react-icons/fa";
 
-const darkModeCookieKey = "cv_darkMode";
+const darkModeKey = "dark-mode";
 
 const DarkModeSwitch = () => {
-	const [darkMode, setDarkMode] = useState<boolean>(() => true);
+	const [darkMode, setDarkMode] = useState<boolean>(() => {
+		const cachedValue = localStorage.getItem(darkModeKey);
 
-	useEffect(() => {
-		const value = !!getCookie(darkModeCookieKey);
-		setDarkMode(() => value ?? true);
-	}, []);
-
-	useEffect(() => {
-		const containsDark =
-			document.documentElement.classList.contains("dark");
-		if (containsDark) {
-			document.documentElement.classList.remove("dark");
-			document.documentElement.classList.add("light");
-		} else {
-			document.documentElement.classList.remove("light");
-			document.documentElement.classList.add("dark");
+		if (cachedValue === null) {
+			console.log(
+				"has no cached value for dark mode, setting as false."
+			);
+			localStorage.setItem(darkModeKey, "false");
+			return false;
 		}
+		return !!cachedValue;
+	});
+
+	useEffect(() => {
+		const handleThemeToggle = () => {
+			const { classList } = document.documentElement;
+
+			const containsDark = classList.contains("dark");
+			const containsLight = classList.contains("light");
+
+			console.log("contains dark: ", containsDark);
+			console.log("contains light: ", containsLight);
+
+			if (!containsLight && !containsDark) {
+				console.log("first load");
+				classList.add(darkMode ? "dark" : "light");
+				return;
+			}
+
+			if (containsLight) {
+				classList.remove("light");
+				classList.add("dark");
+			}
+
+			if (containsDark) {
+				classList.remove("dark");
+				classList.add("light");
+			}
+
+			localStorage.setItem(darkModeKey, JSON.stringify(darkMode));
+		};
+
+		handleThemeToggle();
 	}, [darkMode]);
 
 	const handleToggle = () => {
 		setDarkMode(!darkMode);
-		setCookie(darkModeCookieKey, darkMode);
 	};
 
 	return (
 		<button
-			id="theme-toggle"
-			type="button"
 			className="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5"
 			onClick={handleToggle}>
-			Toggle To {darkMode ? "Light" : "Dark"}
+			{darkMode ? <FaMoon /> : <FaSun />}
 		</button>
 	);
 };
