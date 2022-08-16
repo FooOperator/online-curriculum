@@ -2,7 +2,12 @@
 module.exports = {
 	content: ["./src/**/*.{js,ts,jsx,tsx}"],
 	theme: {
-		extend: {},
+		extend: {
+			fontFamily: {
+				"roboto-slab": ["Roboto Slab"],
+				"fira-mono": ["Fira Mono"],
+			},
+		},
 	},
-	plugins: [require("flowbite/plugin")],
+	plugins: [require("flowbite/plugin"), require("tailwind-scrollbar")],
 };

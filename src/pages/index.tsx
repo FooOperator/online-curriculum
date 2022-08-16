@@ -4,7 +4,7 @@ import Head from "next/head";
 import path from "path";
 import { readFileSync } from "fs";
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
 	FaGithub,
 	FaPhoneSquareAlt,
@@ -14,33 +14,12 @@ import {
 } from "react-icons/fa";
 import { IconType } from "react-icons";
 import useBreakpoint from "../hooks/useBreakpoint";
+import { useTranslation } from "next-i18next";
 
 const DarkModeSwitch = dynamic(
 	() => import("../components/DarkModeSwitch"),
 	{ ssr: false }
 );
-
-const PersonalInformation = () => {
-	const isMobile = useBreakpoint();
-	return (
-		<div className="flex sm:flex-row md:flex-row lg:flex-row  items-center w-100 gap-2">
-			<img
-				className="w-16 h-30 sm:w-30 md:w-30 lg:w-30 rounded-full"
-				src="https://media-exp1.licdn.com/dms/image/C4E03AQHVJ8VM7ImT7A/profile-displayphoto-shrink_200_200/0/1649815425250?e=1665619200&v=beta&t=UinyUrL-qyhU-raXsulfa3APgbKijpkLEKKIGkbw6do"
-				alt="Lucas Guerra Cardoso's Avatar"
-			/>
-			<div className="flex flex-col">
-				<h2
-					className={`text-center ${
-						isMobile ? "text-xl whitespace-nowrap" : "text-4xl"
-					}`}>
-					Lucas Guerra Cardoso
-				</h2>
-				<Contacts />
-			</div>
-		</div>
-	);
-};
 
 const Contacts = () => {
 	return (
@@ -62,121 +41,99 @@ const Contacts = () => {
 	);
 };
 
-type ArticleProps = {
-	title: string;
-	children: JSX.Element[] | JSX.Element;
-};
-
-const Article = ({ title, children }: ArticleProps) => {
+const Sidebar = () => {
 	return (
-		<article>
-			<h2 className="text-3xl">{title}</h2>
-			{children}
-		</article>
+		<div className="flex flex-col gap-3 px-2 min-h-full sm:w-4/12 md:w-4/12 lg:w-3/12 border-r-2 border-red-200">
+			<div className="flex flex-col gap-2 items-center">
+				<img
+					className="w-20 h-20 sm:w-16 sm:h-16 md:w-22 md:h-22 lg:w-32 lg:h-32 rounded-full"
+					src="https://media-exp1.licdn.com/dms/image/C4E03AQHVJ8VM7ImT7A/profile-displayphoto-shrink_800_800/0/1649815425250?e=1666224000&v=beta&t=HvNR3OzymeOSzwb6pP3fZ5AAfXGZXn1mwoClmuu3tyA"
+					alt="lucas guerra cardoso"
+				/>
+				<h1 className="text-xl lg:text-4xl md:text-3xl sm:text-2xl whitespace-nowrap">
+					Lucas Guerra Cardoso
+				</h1>
+			</div>
+			<Contacts />
+			<ul className="flex flex-col w-full p-2 gap-1 text-md">
+				<li className="flex w-full justify-between">
+					<span>Resides In</span>
+					<span>Porto, Portugal</span>
+				</li>
+				<li className="flex w-full justify-between">
+					<span>Address</span>
+					<span>Rua Da Breia, 67</span>
+				</li>
+				<li className="flex w-full justify-between">
+					<span>Date Of Birth</span>
+					<span>04/08/2000</span>
+				</li>
+				<li className="flex w-full justify-between">
+					<span>Nationality</span>
+					<span>Brazilian</span>
+				</li>
+			</ul>
+		</div>
 	);
 };
 
-const Home = ({
-	projects,
-}: InferGetStaticPropsType<typeof getStaticProps>) => {
+const Projects = ({ projects }: { projects: Project[] }) => {
+	return (
+		<div className="flex flex-col gap-2">
+			<ul className="grid grid-cols-3 grid-rows-2 border-2 m-1 border-slate-100 overflow-y-auto scrollbar-thumb-slate-200 scrollbar-track-slate-100 h-96 w-4/4 p-1 gap-x-2 gap-y-1">
+				{projects.map((project, index) => (
+					<li className="w-4/4 h-44" key={index}>
+						<ProjectCard title={project.name} {...project} />
+					</li>
+				))}
+			</ul>
+		</div>
+	);
+};
+
+type Tab = {
+	name: string;
+	content: JSX.Element;
+};
+
+type TabsProps = {
+	items: Tab[];
+	defaultIndex?: number;
+};
+
+const Tabs = ({ items, defaultIndex }: TabsProps) => {
+	const [currentIndex, setCurrentIndex] = useState<number>(
+		defaultIndex ?? 0
+	);
+	const handleSelectTab = (index: number) => {
+		setCurrentIndex(index);
+	};
 	return (
 		<>
-			<Head>
-				<title>Lucas Guerra Cardoso{"'"}s CV</title>
-				<meta name="description" content="Thanks to t3-app!" />
-				<link rel="icon" href="/favicon.ico" />
-			</Head>
-			<div className="py-3 bg-slate-900">
-				<div className="bg-slate-100 text-slate-900 dark:text-slate-50 dark:bg-slate-800">
-					<header>
-						<Navbar />
-					</header>
-					<main className="min-h-screen p-2 text-center sm:text-left md:text-left lg:text-left">
-						<PersonalInformation />
-						<div className="grid grid-cols-3 gap-2 p-4">
-							<Article title="About">
-								<p>
-									Lorem ipsum dolor sit amet consectetur
-									adipisicing elit. Beatae expedita iure
-									nesciunt numquam repellat possimus
-									corporis dolorem ipsa, eveniet
-									consequatur, ut molestias. Dicta, odio
-									quod tenetur enim impedit voluptates
-									dolor.
-								</p>
-								<p>
-									Lorem, ipsum dolor sit amet consectetur
-									adipisicing elit. Nam cumque impedit,
-									natus nisi, dolores rerum sapiente
-									suscipit eveniet quisquam esse
-									consequuntur temporibus recusandae
-									quidem quaerat! Culpa maiores excepturi
-									dolor blanditiis!
-								</p>
-								<p>
-									Lorem ipsum dolor sit amet consectetur
-									adipisicing elit. Quae soluta fugiat
-									asperiores earum corporis sequi esse
-									qui nostrum est? Distinctio quidem
-									aliquid quasi consequuntur totam atque!
-									Id illum deserunt doloremque!
-								</p>
-							</Article>
-							<Article title="Skills">
-								skills go here
-							</Article>
-							<Article title="Projects">
-								<div className="overflow-scroll">
-									{projects.map((project, index) => (
-										<ProjectCard
-											key={index}
-											description={
-												project.description
-											}
-											link={project.link}
-											repo={project.repo}
-											title={project.name}
-										/>
-									))}
-								</div>
-							</Article>
-						</div>
-					</main>
-					<footer className="w-full p-4">
-						<a
-							className="text-lg"
-							href="https://github.com/FooOperator/online-curriculum">
-							Check out the repo for this site
-						</a>
-					</footer>
-				</div>
-			</div>
+			<ul className="flex gap-1 w-full justify-center">
+				{items.map(({ name }, index) => (
+					<li
+						className={`bg-slate-900 border-2 clickable w-28 text-center ${
+							currentIndex === index && "selected"
+						}`}
+						onClick={() => handleSelectTab(index)}
+						key={index}>
+						{name}
+					</li>
+				))}
+			</ul>
+			<>{items[currentIndex]?.content}</>
 		</>
 	);
 };
 
-export const getStaticProps = async (ctx: GetStaticPropsContext) => {
-	const filePath = path.join(
-		process.cwd(),
-		"src",
-		"data",
-		"projects.json"
-	);
-	const data = readFileSync(filePath);
-	const projects = JSON.parse(data);
-
-	return {
-		props: { projects: projects as Project[] },
-	};
-};
-
 const Navbar = () => {
 	const isMobile = useBreakpoint();
+	
 	return (
-		<nav className="flex justify-evenly p-2">
+		<nav className="flex justify-evenly">
 			<div className="flex gap-2 ml-auto">
 				<DarkModeSwitch />
-
 				<select
 					className={`dark:bg-slate-700 ${
 						isMobile ? "w-20 px-2" : undefined
@@ -205,7 +162,7 @@ const ContactIcon = ({ link, Icon }: ContactIconProps) => {
 	return (
 		<a target={"_blank"} href={link} rel="noreferrer">
 			<Icon
-				className={`hover:text-gray-700 dark:hover:text-gray-300`}
+				className={`hover:text-gray-700 dark:hover:text-gray-300 dark:text-gray-200`}
 				size={isMobile ? 25 : 45}
 			/>
 		</a>
@@ -228,14 +185,14 @@ type Project = {
 
 const ProjectCard = (props: ProjectCardProps) => {
 	return (
-		<div className="flex flex-col h-full cursor-pointer gap-1 border-4 p-2 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-900">
+		<div className="card">
 			<a target={"_blank"} href={props.link} rel="noreferrer">
 				<img src="" alt="" />
 				<h3 className="text-2xl">{props.title}</h3>
 				<p className="text-lg">{props.description}</p>
 			</a>
 			<button
-				className="w-32 px-2 py-2 bg-blue-300 dark:bg-blue-700 hover:bg-blue-500 dark:hover:bg-blue-900 rounded-lg ml-auto mt-auto mb-2"
+				className="repo-btn"
 				onClick={() => {
 					window.open(props.repo);
 				}}>
@@ -262,21 +219,77 @@ const SkillCard = (props: SkillCardProps) => {
 	return <></>;
 };
 
-type SectionProps = {
-	name: string;
-	children: React.ReactNode;
+const Home = ({
+	projects,
+}: InferGetStaticPropsType<typeof getStaticProps>) => {
+	const tabs = [
+		{
+			name: "Projects",
+			content: <Projects projects={projects} />,
+		},
+		{ content: <h1>item2</h1>, name: "Experience" },
+		{ content: <h1>item3</h1>, name: "Skills" },
+	];
+	return (
+		<>
+			<Head>
+				<title>Lucas Guerra Cardoso{"'"}s CV</title>
+				<meta name="description" content="Thanks to t3-app!" />
+				<link rel="icon" href="/favicon.ico" />
+			</Head>
+			<header></header>
+			<main className="flex mt-3 dark:text-gray-200 text-gray-700">
+				<Sidebar />
+				<div className="flex flex-col w-full ml-3">
+					<div className="ml-auto p-2">
+						<Navbar />
+					</div>
+					<div className="flex flex-col gap-2">
+						<div className="flex flex-col gap-2">
+							<h2 className="text-2xl ">About Me</h2>
+							<hr className="mx-1" />
+							<p className="">
+								I{"'"}m pursuing a web developer position -
+								I love to create <i>easy-to-use</i>{" "}
+								interfaces and prefer <i>serverless</i>{" "}
+								nowadays. Willing to work with any
+								technology, but love{" "}
+								<strong>Typescript</strong>,{" "}
+								<strong>Next.JS</strong> and{" "}
+								<strong>Tailwind</strong> (
+								<strong>Chakra</strong> is fine too).
+							</p>
+						</div>
+						<div>
+							<Tabs items={tabs} />
+						</div>
+					</div>
+				</div>
+			</main>
+			<footer className="w-full mt-auto p-4">
+				<a
+					className="text-lg"
+					href="https://github.com/FooOperator/online-curriculum">
+					Check out the repo for this site
+				</a>
+			</footer>
+		</>
+	);
 };
 
-const Section = ({ children, name }: SectionProps) => {
-	return (
-		<section className="p-4" id={name.split(" ").join("-")}>
-			<h2 className="text-3xl">
-				{name.charAt(0).toUpperCase() + name.slice(1)}
-			</h2>
-			<hr className="my-2" />
-			<>{children}</>
-		</section>
+export const getStaticProps = async (ctx: GetStaticPropsContext) => {
+	const filePath = path.join(
+		process.cwd(),
+		"src",
+		"data",
+		"projects.json"
 	);
+	const data = readFileSync(filePath);
+	const projects = JSON.parse(data);
+
+	return {
+		props: { projects: projects as Project[] },
+	};
 };
 
 export default Home;
