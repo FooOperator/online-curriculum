@@ -9,4 +9,5 @@ const MyApp: AppType = ({ Component, pageProps }) => {
 	return <Component {...pageProps} />;
 };
 
+// @ts-ignore
 export default appWithTranslation(MyApp);
