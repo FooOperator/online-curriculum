@@ -285,6 +285,7 @@ export const getStaticProps = async (ctx: GetStaticPropsContext) => {
 		"projects.json"
 	);
 	const data = readFileSync(filePath);
+	// @ts-ignore
 	const projects = JSON.parse(data);
 
 	return {
