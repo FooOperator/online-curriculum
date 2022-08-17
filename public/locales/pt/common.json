@@ -1,0 +1,8 @@
+{
+	"personalInfo": {
+		"address": "Endereço",
+		"nationality": "Nacionalidade",
+		"dob": "Data De Nascimento",
+		"resides": "Reside Em"
+	}
+}

@@ -4,7 +4,7 @@ import Head from "next/head";
 import path from "path";
 import { readFileSync } from "fs";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import React, { SelectHTMLAttributes, useState } from "react";
 import {
 	FaGithub,
 	FaPhoneSquareAlt,
@@ -14,8 +14,10 @@ import {
 } from "react-icons/fa";
 import { IconType } from "react-icons";
 import useBreakpoint from "../hooks/useBreakpoint";
-import { useTranslation } from "next-i18next";
-
+import { Translation, useTranslation } from "next-i18next";
+import { serverSideTranslations } from "next-i18next/serverSideTranslations";
+import i18next from "i18next";
+import { useRouter } from "next/router";
 const DarkModeSwitch = dynamic(
 	() => import("../components/DarkModeSwitch"),
 	{ ssr: false }
@@ -23,7 +25,7 @@ const DarkModeSwitch = dynamic(
 
 const Contacts = () => {
 	return (
-		<div className="flex justify-center my-2 dark:bg-slate-800 bg-gray-200 rounded-md p-2">
+		<div className="flex my-2 dark:bg-slate-800 bg-gray-200 rounded-md p-2">
 			<ContactIcon
 				link="https://github.com/FooOperator"
 				Icon={FaGithubSquare}
@@ -41,37 +43,47 @@ const Contacts = () => {
 	);
 };
 
-const Sidebar = () => {
+const InfoRow = ({ field, value }: { field: string; value: string }) => {
 	return (
-		<div className="flex flex-col gap-3 px-2 min-h-full sm:w-4/12 md:w-4/12 lg:w-3/12 border-r-2 border-red-200">
+		<li className="flex items-center sm:flex-col md:flex-row lg:flex-row w-full justify-between">
+			<span>{field}</span>
+			<span>{value}</span>
+		</li>
+	);
+};
+
+const Sidebar = () => {
+	const { t } = useTranslation();
+	return (
+		<div className="flex flex-col mt-8 sm:mx-1 md:mx-2 lg:mx-3 items-center gap-3 px-2 min-h-full sm:w-5/12 md:w-4/12 lg:w-3/12">
 			<div className="flex flex-col gap-2 items-center">
 				<img
 					className="w-20 h-20 sm:w-16 sm:h-16 md:w-22 md:h-22 lg:w-32 lg:h-32 rounded-full"
 					src="https://media-exp1.licdn.com/dms/image/C4E03AQHVJ8VM7ImT7A/profile-displayphoto-shrink_800_800/0/1649815425250?e=1666224000&v=beta&t=HvNR3OzymeOSzwb6pP3fZ5AAfXGZXn1mwoClmuu3tyA"
 					alt="lucas guerra cardoso"
 				/>
-				<h1 className="text-xl lg:text-4xl md:text-3xl sm:text-2xl whitespace-nowrap">
+				<h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl whitespace-nowrap">
 					Lucas Guerra Cardoso
 				</h1>
 			</div>
 			<Contacts />
-			<ul className="flex flex-col w-full p-2 gap-1 text-md">
-				<li className="flex w-full justify-between">
-					<span>Resides In</span>
-					<span>Porto, Portugal</span>
-				</li>
-				<li className="flex w-full justify-between">
-					<span>Address</span>
-					<span>Rua Da Breia, 67</span>
-				</li>
-				<li className="flex w-full justify-between">
-					<span>Date Of Birth</span>
-					<span>04/08/2000</span>
-				</li>
-				<li className="flex w-full justify-between">
-					<span>Nationality</span>
-					<span>Brazilian</span>
-				</li>
+			<ul className="flex flex-col w-full p-2 gap-1 sm:gap-2 sm:text-sm text-md">
+				<InfoRow
+					field={t("personalInfo.resides")}
+					value="Porto, Portugal"
+				/>
+				<InfoRow
+					field={t("personalInfo.address")}
+					value="Rua Da Breia, 67"
+				/>
+				<InfoRow
+					field={t("personalInfo.dob")}
+					value="04/08/2000"
+				/>
+				<InfoRow
+					field={t("personalInfo.nationality")}
+					value={t("Brazilian")}
+				/>
 			</ul>
 		</div>
 	);
@@ -80,9 +92,11 @@ const Sidebar = () => {
 const Projects = ({ projects }: { projects: Project[] }) => {
 	return (
 		<div className="flex flex-col gap-2">
-			<ul className="grid grid-cols-3 grid-rows-2 border-2 m-1 border-slate-100 overflow-y-auto scrollbar-thumb-slate-200 scrollbar-track-slate-100 h-96 w-4/4 p-1 gap-x-2 gap-y-1">
+			<ul className="grid sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 border-2 m-1 dark:border-slate-100 border-slate-700 overflow-y-auto scrollbar-thumb-slate-200 scrollbar-track-slate-100 h-96 w-4/4 p-1 gap-x-2 gap-y-1">
 				{projects.map((project, index) => (
-					<li className="w-4/4 h-44" key={index}>
+					<li
+						className="w-4/4 sm:h-32 md:h-44 lg:h-44"
+						key={index}>
 						<ProjectCard title={project.name} {...project} />
 					</li>
 				))}
@@ -113,7 +127,7 @@ const Tabs = ({ items, defaultIndex }: TabsProps) => {
 			<ul className="flex gap-1 w-full justify-center">
 				{items.map(({ name }, index) => (
 					<li
-						className={`bg-slate-900 border-2 clickable w-28 text-center ${
+						className={`border-2 clickable w-28 text-center ${
 							currentIndex === index && "selected"
 						}`}
 						onClick={() => handleSelectTab(index)}
@@ -129,25 +143,38 @@ const Tabs = ({ items, defaultIndex }: TabsProps) => {
 
 const Navbar = () => {
 	const isMobile = useBreakpoint();
-	
+	const { t, i18n } = useTranslation();
+	const { locales } = useRouter();
+
+	const handleSelect = async (
+		e: React.ChangeEvent<HTMLSelectElement>
+	) => {
+		const { value } = e.currentTarget;
+		try {
+			await i18n.changeLanguage(value);
+		} catch (e) {
+			alert("warning: could't change language.");
+		}
+	};
+
 	return (
-		<nav className="flex justify-evenly">
+		<div className="flex justify-evenly">
 			<div className="flex gap-2 ml-auto">
 				<DarkModeSwitch />
 				<select
+					onChange={handleSelect}
 					className={`dark:bg-slate-700 ${
 						isMobile ? "w-20 px-2" : undefined
 					} px-8 py-0`}
 					name="language">
-					<option value="en">
-						{isMobile ? "en" : "English"}
-					</option>
-					<option value="pt">
-						{isMobile ? "pt" : "Português"}
-					</option>
+					{locales!.map((lang, index) => (
+						<option key={index} value={lang}>
+							{lang}
+						</option>
+					))}
 				</select>
 			</div>
-		</nav>
+		</div>
 	);
 };
 
@@ -184,20 +211,27 @@ type Project = {
 };
 
 const ProjectCard = (props: ProjectCardProps) => {
+	const [isOverCard, setIsOverCard] = useState<boolean>(false);
+
 	return (
-		<div className="card">
+		<div
+			className="card relative"
+			onMouseEnter={() => setIsOverCard(true)}
+			onMouseLeave={() => setIsOverCard(false)}>
 			<a target={"_blank"} href={props.link} rel="noreferrer">
 				<img src="" alt="" />
 				<h3 className="text-2xl">{props.title}</h3>
-				<p className="text-lg">{props.description}</p>
+				<p className="">{props.description}</p>
 			</a>
 			<button
-				className="repo-btn"
+				className={`repo-btn absolute bottom-0 right-1  ${
+					isOverCard && "visible"
+				}`}
 				onClick={() => {
 					window.open(props.repo);
 				}}>
 				<div className="flex w-full justify-between gap-4">
-					<span>Repo</span>
+					<span className="visible">Repo</span>
 					<FaGithub size={25} />
 				</div>
 			</button>
@@ -237,9 +271,9 @@ const Home = ({
 				<meta name="description" content="Thanks to t3-app!" />
 				<link rel="icon" href="/favicon.ico" />
 			</Head>
-			<header></header>
-			<main className="flex mt-3 dark:text-gray-200 text-gray-700">
+			<main className="basis-full flex dark:text-gray-200 text-gray-700">
 				<Sidebar />
+				<div className="mx-1 border-r-2 border-slate-700 dark:border-slate-300" />
 				<div className="flex flex-col w-full ml-3">
 					<div className="ml-auto p-2">
 						<Navbar />
@@ -266,9 +300,9 @@ const Home = ({
 					</div>
 				</div>
 			</main>
-			<footer className="w-full mt-auto p-4">
+			<footer className="mt-auto py-5 px-2">
 				<a
-					className="text-lg"
+					className="link"
 					href="https://github.com/FooOperator/online-curriculum">
 					Check out the repo for this site
 				</a>
@@ -277,7 +311,7 @@ const Home = ({
 	);
 };
 
-export const getStaticProps = async (ctx: GetStaticPropsContext) => {
+export const getStaticProps = async ({ locale }) => {
 	const filePath = path.join(
 		process.cwd(),
 		"src",
@@ -289,7 +323,10 @@ export const getStaticProps = async (ctx: GetStaticPropsContext) => {
 	const projects = JSON.parse(data);
 
 	return {
-		props: { projects: projects as Project[] },
+		props: {
+			...(await serverSideTranslations(locale)),
+			projects: projects as Project[],
+		},
 	};
 };
 

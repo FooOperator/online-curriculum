@@ -4,10 +4,11 @@ import "@fontsource/roboto-slab";
 import "@fontsource/fira-mono";
 
 import { appWithTranslation } from "next-i18next";
+import { AppProps } from "next/app";
+import { ComponentType } from "react";
 
 const MyApp: AppType = ({ Component, pageProps }) => {
 	return <Component {...pageProps} />;
 };
 
-// @ts-ignore
-export default appWithTranslation(MyApp);
+export default appWithTranslation(MyApp as ComponentType<AppProps>);
