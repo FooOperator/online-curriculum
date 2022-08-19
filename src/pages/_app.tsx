@@ -11,4 +11,6 @@ const MyApp: AppType = ({ Component, pageProps }) => {
 	return <Component {...pageProps} />;
 };
 
+
+
 export default appWithTranslation(MyApp as ComponentType<AppProps>);
