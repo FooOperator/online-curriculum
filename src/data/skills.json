@@ -1,0 +1,30 @@
+[
+	{
+		"name": "Typescript",
+		"time": [2]
+	},
+	{
+		"name": "HTML",
+		"time": [3]
+	},
+	{
+		"name": "CSS",
+		"time": [3]
+	},
+	{
+		"name": "Tailwind",
+		"time": [2, "months"]
+	},
+	{
+		"name": "Nextjs",
+		"time": [3, "months"]
+	},
+	{
+		"name": "Javascript",
+		"time": [3]
+	},
+	{
+		"name": "Prisma",
+		"time": [2, "months"]
+	}
+]
