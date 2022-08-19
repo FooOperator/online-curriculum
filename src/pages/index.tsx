@@ -14,9 +14,8 @@ import {
 } from "react-icons/fa";
 import { IconType } from "react-icons";
 import useBreakpoint from "../hooks/useBreakpoint";
-import { Translation, useTranslation } from "next-i18next";
+import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
-import i18next from "i18next";
 import { useRouter } from "next/router";
 const DarkModeSwitch = dynamic(
 	() => import("../components/DarkModeSwitch"),
@@ -82,7 +81,7 @@ const Sidebar = () => {
 				/>
 				<InfoRow
 					field={t("personalInfo.nationality")}
-					value={t("Brazilian")}
+					value={"Brazilian"}
 				/>
 			</ul>
 		</div>
@@ -98,6 +97,22 @@ const Projects = ({ projects }: { projects: Project[] }) => {
 						className="w-4/4 sm:h-32 md:h-44 lg:h-44"
 						key={index}>
 						<ProjectCard title={project.name} {...project} />
+					</li>
+				))}
+			</ul>
+		</div>
+	);
+};
+
+const Skills = ({ skills }: { skills: Skill[] }) => {
+	return (
+		<div className="flex flex-col gap-2">
+			<ul className="grid sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 border-2 m-1 dark:border-slate-100 border-slate-700 overflow-y-auto scrollbar-thumb-slate-200 scrollbar-track-slate-100 h-96 w-4/4 p-1 gap-x-2">
+				{skills.map((skill, index) => (
+					<li
+						className="w-4/4 sm:h-10 md:h-14 lg:h-16"
+						key={index}>
+						<SkillCard {...skill} />
 					</li>
 				))}
 			</ul>
@@ -141,20 +156,17 @@ const Tabs = ({ items, defaultIndex }: TabsProps) => {
 	);
 };
 
-const Navbar = () => {
+const Toolbar = () => {
 	const isMobile = useBreakpoint();
-	const { t, i18n } = useTranslation();
-	const { locales } = useRouter();
+	const { i18n } = useTranslation();
+	const { locales, locale } = useRouter();
+	const { language, languages } = i18n;
 
 	const handleSelect = async (
 		e: React.ChangeEvent<HTMLSelectElement>
 	) => {
 		const { value } = e.currentTarget;
-		try {
-			await i18n.changeLanguage(value);
-		} catch (e) {
-			alert("warning: could't change language.");
-		}
+		i18n.changeLanguage(value);
 	};
 
 	return (
@@ -168,7 +180,10 @@ const Navbar = () => {
 					} px-8 py-0`}
 					name="language">
 					{locales!.map((lang, index) => (
-						<option key={index} value={lang}>
+						<option
+							selected={locale === lang}
+							key={index}
+							value={lang}>
 							{lang}
 						</option>
 					))}
@@ -241,28 +256,41 @@ const ProjectCard = (props: ProjectCardProps) => {
 
 type Skill = {
 	name: string;
-	time: number;
+	time: [number, "years" | "months"];
 };
 
-type SkillCardProps = CardProps &
-	Skill & {
-		Icon: IconType;
-	};
+type SkillCardProps = CardProps & Omit<Skill, "title" | "description">;
 
 const SkillCard = (props: SkillCardProps) => {
-	return <></>;
+	return (
+		<div className="card flex-row items-center justify-between relative">
+			<img src="" alt="" />
+			<h3 className="text-2xl mr-auto">{props.name}</h3>
+			<p className="">{props.description}</p>
+			<p className="">
+				{props.time[0]} {props.time[1] ?? "Years"}
+			</p>
+		</div>
+	);
 };
 
 const Home = ({
 	projects,
+	skills,
 }: InferGetStaticPropsType<typeof getStaticProps>) => {
 	const tabs = [
 		{
 			name: "Projects",
 			content: <Projects projects={projects} />,
 		},
-		{ content: <h1>item2</h1>, name: "Experience" },
-		{ content: <h1>item3</h1>, name: "Skills" },
+		{
+			name: "Experience",
+			content: <h1>item2</h1>,
+		},
+		{
+			name: "Skills",
+			content: <Skills skills={skills} />,
+		},
 	];
 	return (
 		<>
@@ -276,7 +304,7 @@ const Home = ({
 				<div className="mx-1 border-r-2 border-slate-700 dark:border-slate-300" />
 				<div className="flex flex-col w-full ml-3">
 					<div className="ml-auto p-2">
-						<Navbar />
+						<Toolbar />
 					</div>
 					<div className="flex flex-col gap-2">
 						<div className="flex flex-col gap-2">
@@ -312,20 +340,31 @@ const Home = ({
 };
 
 export const getStaticProps = async ({ locale }) => {
-	const filePath = path.join(
+	const filePathProj = path.join(
 		process.cwd(),
 		"src",
 		"data",
 		"projects.json"
 	);
-	const data = readFileSync(filePath);
+	const filePathSkills = path.join(
+		process.cwd(),
+		"src",
+		"data",
+		"skills.json"
+	);
+	const dataProj = readFileSync(filePathProj);
+	const dataSkills = readFileSync(filePathSkills);
+
 	// @ts-ignore
-	const projects = JSON.parse(data);
+	const skills = JSON.parse(dataSkills);
+	// @ts-ignore
+	const projects = JSON.parse(dataProj);
 
 	return {
 		props: {
-			...(await serverSideTranslations(locale)),
+			...(await serverSideTranslations(locale, ["common"])),
 			projects: projects as Project[],
+			skills: skills as Skill[],
 		},
 	};
 };
