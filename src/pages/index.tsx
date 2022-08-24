@@ -1,10 +1,11 @@
 /* eslint-disable @next/next/no-img-element */
 import type { GetStaticPropsContext, InferGetStaticPropsType } from "next";
+import superjson from "superjson";
 import Head from "next/head";
 import path from "path";
-import { readFileSync } from "fs";
+import { readdir, readdirSync, readFileSync } from "fs";
 import dynamic from "next/dynamic";
-import React, { SelectHTMLAttributes, useState } from "react";
+import React, { SelectHTMLAttributes, useEffect, useState } from "react";
 import {
 	FaGithub,
 	FaPhoneSquareAlt,
@@ -17,6 +18,92 @@ import useBreakpoint from "../hooks/useBreakpoint";
 import { useTranslation } from "next-i18next";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useRouter } from "next/router";
+import { any } from "zod";
+
+const Home = ({ tabData }: { tabData: { [key: string]: any } }) => {
+	const tabs = [
+		{
+			name: "Projects",
+			content: (
+				<Projects projects={tabData["projects"] as Project[]} />
+			),
+		},
+		{
+			name: "Experience",
+		},
+		{
+			name: "Skills",
+			content: <Skills skills={tabData["skills"] as Skill[]} />,
+		},
+	];
+	return (
+		<>
+			<Head>
+				<title>Lucas Guerra Cardoso{"'"}s CV</title>
+				<meta name="description" content="Thanks to t3-app!" />
+				<link rel="icon" href="/favicon.ico" />
+			</Head>
+			<main className="basis-full flex dark:text-gray-200 text-gray-700">
+				<Sidebar />
+				<div className="mx-1 border-r-2 border-slate-700 dark:border-slate-300" />
+				<div className="flex flex-col w-full ml-3">
+					<div className="ml-auto p-2">
+						<Toolbar />
+					</div>
+					<div className="flex flex-col gap-2">
+						<div className="flex flex-col gap-2">
+							<h2 className="text-2xl ">About Me</h2>
+							<hr className="mx-1" />
+							<p className="">
+								I{"'"}m pursuing a web developer position -
+								I love to create <i>easy-to-use</i>{" "}
+								interfaces and prefer <i>serverless</i>{" "}
+								nowadays. Willing to work with any
+								technology, but love{" "}
+								<strong>Typescript</strong>,{" "}
+								<strong>Next.JS</strong> and{" "}
+								<strong>Tailwind</strong> (
+								<strong>Chakra</strong> is fine too).
+							</p>
+						</div>
+						<div>
+							<Tabs items={tabs} />
+						</div>
+					</div>
+				</div>
+			</main>
+			<footer className="mt-auto py-1 px-2">
+				<a
+					className="link"
+					href="https://github.com/FooOperator/online-curriculum">
+					Check out the repo for this site
+				</a>
+				{/* <pre>{JSON.stringify(tabData, null, 6)}</pre> */}
+			</footer>
+		</>
+	);
+};
+
+export const getStaticProps = async ({ locale }: { locale: string }) => {
+	const dataDir = "./src/data/";
+	const jsons = readdirSync(dataDir);
+	const dataFiles: { [key: string]: string } = {};
+	jsons.forEach((file) => {
+		const filePath = path.join(dataDir + file);
+		const data = readFileSync(filePath);
+		dataFiles[file.substring(0, file.length - 5)] = JSON.parse(
+			data.toString()
+		);
+	});
+
+	return {
+		props: {
+			tabData: dataFiles,
+			...(await serverSideTranslations(locale, ["common"])),
+		},
+	};
+};
+
 const DarkModeSwitch = dynamic(
 	() => import("../components/DarkModeSwitch"),
 	{ ssr: false }
@@ -88,10 +175,49 @@ const Sidebar = () => {
 	);
 };
 
+type ProjectCardProps = CardProps & Omit<Project, "name" | "description">;
+
+type Project = {
+	name: string;
+	description: string;
+	link: string;
+	repo: string;
+};
+
+const ProjectCard = (props: ProjectCardProps) => {
+	const [isOverCard, setIsOverCard] = useState<boolean>(false);
+
+	return (
+		<div
+			onClick={() => {
+				window.open(props.link);
+			}}
+			className="card relative"
+			onMouseEnter={() => setIsOverCard(true)}
+			onMouseLeave={() => setIsOverCard(false)}>
+			<img src="" alt="" />
+			<h3 className="text-2xl">{props.title}</h3>
+			<p className="">{props.description}</p>
+			<button
+				className={`repo-btn absolute bottom-0 right-1  ${
+					isOverCard && "visible"
+				}`}
+				onClick={() => {
+					window.open(props.repo);
+				}}>
+				<div className="flex w-full justify-between gap-4">
+					<span className="visible">Repo</span>
+					<FaGithub size={25} />
+				</div>
+			</button>
+		</div>
+	);
+};
+
 const Projects = ({ projects }: { projects: Project[] }) => {
 	return (
 		<div className="flex flex-col gap-2">
-			<ul className="grid sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 border-2 m-1 dark:border-slate-100 border-slate-700 overflow-y-auto scrollbar-thumb-slate-200 scrollbar-track-slate-100 h-96 w-4/4 p-1 gap-x-2 gap-y-1">
+			<ul className="grid sm:grid-cols-1 md:grid-cols-3 lg:grid-cols-3 border-2 m-1 dark:border-slate-100 border-slate-700 overflow-y-auto scrollbar-thumb-slate-200 scrollbar-track-slate-100 w-4/4 p-1 gap-x-2 gap-y-1">
 				{projects.map((project, index) => (
 					<li
 						className="w-4/4 sm:h-32 md:h-44 lg:h-44"
@@ -104,33 +230,18 @@ const Projects = ({ projects }: { projects: Project[] }) => {
 	);
 };
 
-const Skills = ({ skills }: { skills: Skill[] }) => {
-	return (
-		<div className="flex flex-col gap-2">
-			<ul className="grid sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 border-2 m-1 dark:border-slate-100 border-slate-700 overflow-y-auto scrollbar-thumb-slate-200 scrollbar-track-slate-100 h-96 w-4/4 p-1 gap-x-2">
-				{skills.map((skill, index) => (
-					<li
-						className="w-4/4 sm:h-10 md:h-14 lg:h-16"
-						key={index}>
-						<SkillCard {...skill} />
-					</li>
-				))}
-			</ul>
-		</div>
-	);
-};
-
 type Tab = {
 	name: string;
-	content: JSX.Element;
+	content?: JSX.Element;
 };
 
 type TabsProps = {
 	items: Tab[];
 	defaultIndex?: number;
+	isVertical?: true;
 };
 
-const Tabs = ({ items, defaultIndex }: TabsProps) => {
+const Tabs = ({ items, defaultIndex, isVertical }: TabsProps) => {
 	const [currentIndex, setCurrentIndex] = useState<number>(
 		defaultIndex ?? 0
 	);
@@ -138,8 +249,11 @@ const Tabs = ({ items, defaultIndex }: TabsProps) => {
 		setCurrentIndex(index);
 	};
 	return (
-		<>
-			<ul className="flex gap-1 w-full justify-center">
+		<div className={`flex ${!isVertical && "flex-col"} p-2`}>
+			<ul
+				className={`flex ${
+					isVertical && "flex-col mb-auto"
+				} mt-2  gap-1  justify-center mb-2`}>
 				{items.map(({ name }, index) => (
 					<li
 						className={`border-2 clickable w-28 text-center ${
@@ -151,8 +265,12 @@ const Tabs = ({ items, defaultIndex }: TabsProps) => {
 					</li>
 				))}
 			</ul>
-			<>{items[currentIndex]?.content}</>
-		</>
+			<div className={` basis-full overflow-auto`}>
+				{items[currentIndex]?.content ?? (
+					<h2>Content Should Appear Here</h2>
+				)}
+			</div>
+		</div>
 	);
 };
 
@@ -216,157 +334,153 @@ type CardProps = {
 	description: string;
 };
 
-type ProjectCardProps = CardProps & Omit<Project, "name" | "description">;
+type SkillLevel = "beginner" | "intermediary" | "proficient" | "master";
 
-type Project = {
-	name: string;
-	description: string;
-	link: string;
-	repo: string;
-};
-
-const ProjectCard = (props: ProjectCardProps) => {
-	const [isOverCard, setIsOverCard] = useState<boolean>(false);
-
-	return (
-		<div
-			className="card relative"
-			onMouseEnter={() => setIsOverCard(true)}
-			onMouseLeave={() => setIsOverCard(false)}>
-			<a target={"_blank"} href={props.link} rel="noreferrer">
-				<img src="" alt="" />
-				<h3 className="text-2xl">{props.title}</h3>
-				<p className="">{props.description}</p>
-			</a>
-			<button
-				className={`repo-btn absolute bottom-0 right-1  ${
-					isOverCard && "visible"
-				}`}
-				onClick={() => {
-					window.open(props.repo);
-				}}>
-				<div className="flex w-full justify-between gap-4">
-					<span className="visible">Repo</span>
-					<FaGithub size={25} />
-				</div>
-			</button>
-		</div>
-	);
-};
+type SkillCategory =
+	| "all"
+	| "database"
+	| "programming"
+	| "styling"
+	| "design";
 
 type Skill = {
 	name: string;
-	time: [number, "years" | "months"];
+	level: SkillLevel;
+	category: SkillCategory;
+	docs: string;
+	iconUrl: string;
 };
+
+const skillLevelOrder: SkillLevel[] = [
+	"master",
+	"proficient",
+	"intermediary",
+	"beginner",
+];
 
 type SkillCardProps = Skill;
 
 const SkillCard = (props: SkillCardProps) => {
 	return (
-		<div className="card flex-row items-center justify-between relative">
-			<img src="" alt="" />
-			<h3 className="text-2xl mr-auto">{props.name}</h3>
+		<div
+			onClick={() => {
+				window.open(props.docs);
+			}}
+			className="card border-2 flex-row items-center justify-between relative">
+			<div className="sm:h-6 sm:w-6 md:h-8 md:w-8 lg:h-8 lg:w-8">
+				<img
+					className="object-fit"
+					alt={
+						props.iconUrl
+							? `icon for ${props.name}`
+							: `placeholder icon`
+					}
+					src={
+						props.iconUrl ??
+						"https://icon-library.com/images/icon-placeholder/icon-placeholder-12.jpg"
+					}
+				/>
+			</div>
+			<h3 className="text-2xl ml-2 mr-auto">{props.name}</h3>
 			<p className="">
-				{props.time[0]} {props.time[1] ?? "Years"}
+				{props.level}|{props.category}
 			</p>
 		</div>
 	);
 };
 
-const Home = ({
-	projects,
-	skills,
-}: InferGetStaticPropsType<typeof getStaticProps>) => {
+type SortType = "asc" | "desc" | "level" | "level-asc";
+
+const Skills = ({ skills }: { skills: Skill[] }) => {
+	const [sortType, setSortType] = useState<SortType>("desc");
+	const [sortedSkills, setSortedSkills] = useState<Skill[]>(
+		() => skills
+	);
+	const List = () => (
+		<ul className="flex flex-col gap-1 sm:h-52 md:h-96 lg:h-96 dark:border-slate-100 border-slate-700 overflow-y-auto scrollbar-thumb-slate-200 scrollbar-track-slate-100 px-5 py-2 gap-x-2 relative">
+			{sortedSkills.map((skill, index) => (
+				<li className={`sm:h-10 md:h-14 lg:h-16`} key={index}>
+					<SkillCard {...skill} />
+				</li>
+			))}
+		</ul>
+	);
+
 	const tabs = [
-		{
-			name: "Projects",
-			content: <Projects projects={projects} />,
-		},
-		{
-			name: "Experience",
-			content: <h1>item2</h1>,
-		},
-		{
-			name: "Skills",
-			content: <Skills skills={skills} />,
-		},
-	];
-	return (
-		<>
-			<Head>
-				<title>Lucas Guerra Cardoso{"'"}s CV</title>
-				<meta name="description" content="Thanks to t3-app!" />
-				<link rel="icon" href="/favicon.ico" />
-			</Head>
-			<main className="basis-full flex dark:text-gray-200 text-gray-700">
-				<Sidebar />
-				<div className="mx-1 border-r-2 border-slate-700 dark:border-slate-300" />
-				<div className="flex flex-col w-full ml-3">
-					<div className="ml-auto p-2">
-						<Toolbar />
-					</div>
-					<div className="flex flex-col gap-2">
-						<div className="flex flex-col gap-2">
-							<h2 className="text-2xl ">About Me</h2>
-							<hr className="mx-1" />
-							<p className="">
-								I{"'"}m pursuing a web developer position -
-								I love to create <i>easy-to-use</i>{" "}
-								interfaces and prefer <i>serverless</i>{" "}
-								nowadays. Willing to work with any
-								technology, but love{" "}
-								<strong>Typescript</strong>,{" "}
-								<strong>Next.JS</strong> and{" "}
-								<strong>Tailwind</strong> (
-								<strong>Chakra</strong> is fine too).
-							</p>
-						</div>
-						<div>
-							<Tabs items={tabs} />
-						</div>
-					</div>
-				</div>
-			</main>
-			<footer className="mt-auto py-5 px-2">
-				<a
-					className="link"
-					href="https://github.com/FooOperator/online-curriculum">
-					Check out the repo for this site
-				</a>
-			</footer>
-		</>
-	);
-};
+		"All",
+		"Programming",
+		"Styling",
+		"Structure",
+		"Database",
+	].map((filter, index) => ({
+		name: filter,
+		content: <List />,
+	}));
 
-//
-export const getStaticProps = async ({ locale }: {locale: string}) => {
-	const filePathProj = path.join(
-		process.cwd(),
-		"src",
-		"data",
-		"projects.json"
-	);
-	const filePathSkills = path.join(
-		process.cwd(),
-		"src",
-		"data",
-		"skills.json"
-	);
-	const dataProj = readFileSync(filePathProj);
-	const dataSkills = readFileSync(filePathSkills);
+	useEffect(() => {
+		switch (sortType) {
+			case "desc":
+				setSortedSkills(
+					[...skills].sort((a, b) => {
+						return a.name.localeCompare(b.name);
+					})
+				);
+				break;
+			case "level":
+				setSortedSkills(
+					[...skills].sort((a, b) => {
+						const aLevel = a.level;
+						const bLevel = b.level;
 
-	// @ts-ignore
-	const skills = JSON.parse(dataSkills);
-	// @ts-ignore
-	const projects = JSON.parse(dataProj);
+						return (
+							skillLevelOrder.indexOf(aLevel) -
+							skillLevelOrder.indexOf(bLevel)
+						);
+					})
+				);
+				break;
+			case "level-asc":
+				setSortedSkills(
+					[...skills].sort((a, b) => {
+						const aLevel = a.level;
+						const bLevel = b.level;
 
-	return {
-		props: {
-			...(await serverSideTranslations(locale, ["common"])),
-			projects: projects as Project[],
-			skills: skills as Skill[],
-		},
+						return (
+							skillLevelOrder.indexOf(bLevel) -
+							skillLevelOrder.indexOf(aLevel)
+						);
+					})
+				);
+				break;
+			default:
+				setSortedSkills(
+					[...skills].sort((a, b) => {
+						return b.name.localeCompare(a.name);
+					})
+				);
+		}
+	}, [skills, sortType]);
+
+	const handleFilterChange = (
+		e: React.ChangeEvent<HTMLSelectElement>
+	) => {
+		const { value } = e.target;
+		setSortType(value as SortType);
 	};
+
+	return (
+		<div className="flex flex-col gap-2 border-2 border-slate-600">
+			<div className="mt-4 p-2">
+				<Tabs items={tabs} isVertical />
+			</div>
+			<p className="mx-auto my-0">
+				Icons provided by{" "}
+				<a className="link" href="https://devicon.dev/">
+					DEVICON
+				</a>
+			</p>
+		</div>
+	);
 };
 
 export default Home;
