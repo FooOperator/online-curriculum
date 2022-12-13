@@ -14,7 +14,7 @@
 	{
 		"name": "Quizzical Masterpiece",
 		"description": "Serverless trivia minigame",
-		"link": "https://redux-quizzical.herokuapp.com/",
+		"link": "https://quizzical-masterpiece.vercel.app/",
 		"repo": "https://github.com/FooOperator/quizzical-masterpiece"
 	},
 	{
