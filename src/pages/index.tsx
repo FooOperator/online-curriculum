@@ -145,7 +145,7 @@ const Sidebar = () => {
 			<div className="flex flex-col gap-2 items-center">
 				<img
 					className="w-20 h-20 sm:w-16 sm:h-16 md:w-22 md:h-22 lg:w-32 lg:h-32 rounded-full"
-					src="https://media-exp1.licdn.com/dms/image/C4E03AQHVJ8VM7ImT7A/profile-displayphoto-shrink_800_800/0/1649815425250?e=1666224000&v=beta&t=HvNR3OzymeOSzwb6pP3fZ5AAfXGZXn1mwoClmuu3tyA"
+					src="https://media.licdn.com/dms/image/C4E03AQHVJ8VM7ImT7A/profile-displayphoto-shrink_200_200/0/1649815425250?e=1677110400&v=beta&t=93i6vGUuQyrV6npzY4ZwTPrqhWMMUGxxL9XnF7OolM0"
 					alt="lucas guerra cardoso"
 				/>
 				<h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl whitespace-nowrap">
